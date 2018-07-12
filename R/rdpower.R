@@ -1,6 +1,6 @@
 ###################################################################
 # rdpower: power calculations for RD designs
-# !version 0.1 13-Mar-2018
+# !version 0.2 12-Jul-2018
 # Authors: Matias Cattaneo, Rocio Titiunik, Gonzalo Vazquez-Bare
 ###################################################################
 
@@ -201,8 +201,8 @@ rdpower = function(data = NULL,
       h.aux = aux$bws
       h.l = h.aux[1,1]
       h.r = h.aux[1,2]
-      nh.l = aux$N_h_l
-      nh.r = aux$N_h_r
+      nh.l = aux$Nh[1]
+      nh.r = aux$Nh[2]
 
       if (is.null(bias)){
         bias = aux$bias

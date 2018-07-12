@@ -1,6 +1,6 @@
 ###################################################################
 # rdpower: Power calculations for RD designs
-# !version 0.3 13-Mar-2018
+# !version 0.2 12-Jul-2018
 # Authors: Matias Cattaneo, Rocio Titiunik, Gonzalo Vazquez-Bare
 ###################################################################
 
