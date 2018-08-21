@@ -103,7 +103,7 @@ rdsampsi = function(data = NULL,
                     covs = NULL,
                     deriv = 0,
                     p = 1,
-                    q = 2,
+                    q = NULL,
                     h = NULL,
                     b = NULL,
                     rho = NULL,
@@ -190,6 +190,9 @@ rdsampsi = function(data = NULL,
       stop('nratio has to be in (0,1)')
     }
   }
+
+  if (is.null(q)){ q = p + 1}
+
 
   #################################################################
   # Bias and variance

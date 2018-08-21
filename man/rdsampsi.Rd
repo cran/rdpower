@@ -5,12 +5,13 @@
 \title{Sample Size Calculations for RD Designs}
 \usage{
 rdsampsi(data = NULL, cutoff = 0, tau = NULL, alpha = 0.05,
-  beta = 0.8, samph = NULL, nsamples = NULL, all = FALSE, bias = NULL,
-  variance = NULL, nratio = NULL, init.cond = NULL, plot = FALSE,
-  graph.range = NULL, covs = NULL, deriv = 0, p = 1, q = 2,
-  h = NULL, b = NULL, rho = NULL, kernel = "triangular",
-  bwselect = "mserd", vce = "nn", cluster = NULL, scalepar = 1,
-  scaleregul = 1, fuzzy = NULL, level = 90)
+  beta = 0.8, samph = NULL, nsamples = NULL, all = FALSE,
+  bias = NULL, variance = NULL, nratio = NULL, init.cond = NULL,
+  plot = FALSE, graph.range = NULL, covs = NULL, deriv = 0,
+  p = 1, q = NULL, h = NULL, b = NULL, rho = NULL,
+  kernel = "triangular", bwselect = "mserd", vce = "nn",
+  cluster = NULL, scalepar = 1, scaleregul = 1, fuzzy = NULL,
+  level = 90)
 }
 \arguments{
 \item{data}{a matrix (Y,R) containing the outcome variable and the running variable (as column vectors).}

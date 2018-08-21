@@ -98,7 +98,7 @@ rdpower = function(data = NULL,
                    covs = NULL,
                    deriv = 0,
                    p = 1,
-                   q = 2,
+                   q = NULL,
                    h = NULL,
                    b = NULL,
                    rho = NULL,
@@ -185,6 +185,8 @@ rdpower = function(data = NULL,
     }
     else {stop('variance incorrectly specified')}
   }
+
+  if (is.null(q)){ q = p + 1}
 
 
   #################################################################

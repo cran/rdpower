@@ -11,11 +11,19 @@ The regression discontinuity (RD) design is a popular quasi-experimental design
 for causal inference and policy evaluation. The \code{'rdpower'} package provides tools
 to perform power and sample size calculations in RD designs: \code{\link{rdpower}()} calculates
 the power of an RD design and \code{\link{rdsampsi}()} calculates the required sample size to achieve
-a desired power. For more details, and related \code{Stata} and \code{R} packages
+a desired power. This package relies on the \code{rdrobust} package. See Calonico, Cattaneo and Titiunik (2014, 2015) and
+Calonico, Cattaneo, Farrell and Titiunik (2017).
+For more details, and related \code{Stata} and \code{R} packages
 useful for analysis of RD designs, visit \url{https://sites.google.com/site/rdpackages}.
 }
 \references{
 M.D. Cattaneo, R. Titiunik and G. Vazquez-Bare. (2018). \href{https://sites.google.com/site/rdpackages/rdpower/Cattaneo-Titiunik-VazquezBare_2018_Stata.pdf}{Power Calculations for Regression Discontinuity Designs}. \emph{Working paper, University of Michigan}.
+
+M.D. Cattaneo, S. Calonico and R. Titiunik. (2014). \href{https://sites.google.com/site/rdpackages/rdrobust/Calonico-Cattaneo-Titiunik_2014_Stata.pdf}{Robust Data-Driven Inference in the Regression-Discontinuity Design}. \emph{Stata Journal 14(4): 909-946}.
+
+M.D. Cattaneo, S. Calonico and R. Titiunik. (2015).\href{https://sites.google.com/site/rdpackages/rdrobust/Calonico-Cattaneo-Titiunik_2015_R.pdf}{ \code{rdrobust}: An R Package for Robust Nonparametric Inference in Regression-Discontinuity Designs}. \emph{R Journal 7(1): 38-51}.
+
+M.D. Cattaneo, S. Calonico, M. Farrell and R. Titiunik. (2017).\href{https://sites.google.com/site/rdpackages/rdrobust/Calonico-Cattaneo-Farrell-Titiunik_2017_Stata.pdf}{ \code{rdrobust}: Software for Regression Discontinuity Designs}. \emph{Stata Journal 17(2): 372-404}.
 }
 \author{
 Matias Cattaneo, University of Michigan. \email{cattaneo@umich.edu}
