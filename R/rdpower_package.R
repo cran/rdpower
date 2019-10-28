@@ -1,6 +1,6 @@
 ###################################################################
 # rdpower: Power calculations for RD designs
-# !version 0.2 12-Jul-2018
+# !version 0.4 14-Oct-2019
 # Authors: Matias Cattaneo, Rocio Titiunik, Gonzalo Vazquez-Bare
 ###################################################################
 
@@ -17,15 +17,15 @@
 #' useful for analysis of RD designs, visit \url{https://sites.google.com/site/rdpackages}.
 #'
 #' @author
-#' Matias Cattaneo, University of Michigan. \email{cattaneo@umich.edu}
+#' Matias Cattaneo, Princeton University. \email{cattaneo@princeton.edu}
 #'
-#' Rocio Titiunik, University of Michigan. \email{titiunik@umich.edu}
+#' Rocio Titiunik, Princeton University. \email{titiunik@princeton.edu}
 #'
-#' Gonzalo Vazquez-Bare, University of Michigan. \email{gvazquez@umich.edu}
+#' Gonzalo Vazquez-Bare, UC Santa Barbara. \email{gvazquez@econ.ucsb.edu}
 #'
 #' @references
 #'
-#' M.D. Cattaneo, R. Titiunik and G. Vazquez-Bare. (2018). \href{https://sites.google.com/site/rdpackages/rdpower/Cattaneo-Titiunik-VazquezBare_2018_Stata.pdf}{Power Calculations for Regression Discontinuity Designs}. \emph{Working paper, University of Michigan}.
+#' M.D. Cattaneo, R. Titiunik and G. Vazquez-Bare. (2019). \href{https://sites.google.com/site/rdpackages/rdpower/Cattaneo-Titiunik-VazquezBare_2019_Stata.pdf}{Power Calculations for Regression Discontinuity Designs}. \emph{Stata Journal}, 19(1): 210-245.
 #'
 #' M.D. Cattaneo, S. Calonico and R. Titiunik. (2014). \href{https://sites.google.com/site/rdpackages/rdrobust/Calonico-Cattaneo-Titiunik_2014_Stata.pdf}{Robust Data-Driven Inference in the Regression-Discontinuity Design}. \emph{Stata Journal 14(4): 909-946}.
 #'
