@@ -1,6 +1,6 @@
 ###################################################################
 # rdsampsi: sample size calculations for RD designs
-# !version 0.4 14-Oct-2019
+# !version 0.5 03-Apr-2020
 # Authors: Matias Cattaneo, Rocio Titiunik, Gonzalo Vazquez-Bare
 ###################################################################
 
@@ -36,6 +36,7 @@
 #' @param plot plots the power function using the conventional and robust bias corrected standard errors from \code{rdrobust}.
 #' @param graph.range range of the plot.
 #' @param covs option for \code{rdrobust()}: specifies additional covariates to be used for estimation and inference.
+#' @param covs_drop option for \code{rdrobust()}: if TRUE, it checks for collinear additional covariates and drops them. Default is TRUE.
 #' @param deriv option for \code{rdrobust()}: specifies the order of the derivative of the regression functions to be estimated.
 #' @param p option for \code{rdrobust()}: specifies the order of the local-polynomial used to construct the point-estimator.
 #' @param q option for \code{rdrobust()}: specifies the order of the local-polynomial used to construct the bias-correction.
@@ -50,7 +51,11 @@
 #' @param scaleregul option for \code{rdrobust()}: specifies scaling factor for the regularization terms of bandwidth selectors.
 #' @param fuzzy option for \code{rdrobust()}: specifies the treatment status variable used to implement fuzzy RD estimation.
 #' @param level option for \code{rdrobust()}: sets the confidence level for confidence intervals.
-#'
+#' @param weights option for \code{rdrobust()}: is the variable used for optional weighting of the estimation procedure. The unit-specific weights multiply the kernel function.
+#' @param masspoints option for \code{rdrobust()}: checks and controls for repeated observations in tue running variable.
+#' @param bwcheck option for \code{rdrobust()}: if a positive integer is provided, the preliminary bandwidth used in the calculations is enlarged so that at least \code{bwcheck} unique observations are used.
+#' @param bwrestrict option for \code{rdrobust()}: if TRUE, computed bandwidths are restricted to lie withing the range of \code{x}. Default is \code{bwrestrict=TRUE}.
+#' @param stdvars option for \code{rdrobust()}: if \code{TRUE}, \code{x} and \code{y} are standardized before computing the bandwidths. Default is \code{stdvars=TRUE}.
 #'
 #' @return
 #' \item{alpha}{significance level}
@@ -101,6 +106,7 @@ rdsampsi = function(data = NULL,
                     graph.range = NULL,
 
                     covs = NULL,
+                    covs_drop = TRUE,
                     deriv = 0,
                     p = 1,
                     q = NULL,
@@ -114,11 +120,12 @@ rdsampsi = function(data = NULL,
                     scalepar = 1,
                     scaleregul = 1,
                     fuzzy = NULL,
-                    level = 90){
-
-
-
-
+                    level = 95,
+                    weights = NULL,
+                    masspoints = 'adjust',
+                    bwcheck = NULL,
+                    bwrestrict = TRUE,
+                    stdvars = FALSE){
 
   #################################################################
   # Options, default values and error checking
@@ -200,8 +207,9 @@ rdsampsi = function(data = NULL,
 
   if (!is.null(data)){
     if (is.null(bias) | is.null(variance)){
-      aux = rdrobust::rdrobust(Y,R,c=cutoff,all=TRUE,covs=covs,deriv=deriv,p=p,q=q,h=h,b=b,rho=rho,cluster=cluster,
-                     kernel=kernel,bwselect=bwselect,vce=vce,scalepar=scalepar,scaleregul=scaleregul,fuzzy=fuzzy)
+      aux = rdrobust::rdrobust(Y,R,c=cutoff,all=TRUE,covs=covs,covs_drop=covs_drop,deriv=deriv,p=p,q=q,h=h,b=b,rho=rho,cluster=cluster,
+                     kernel=kernel,bwselect=bwselect,vce=vce,scalepar=scalepar,scaleregul=scaleregul,
+                     fuzzy=fuzzy,level=level,weights=weights,masspoints=masspoints,bwcheck=bwcheck,bwrestrict=bwrestrict,stdvars=stdvars)
 
       h.aux = aux$bws
       h.l = h.aux[1,1]

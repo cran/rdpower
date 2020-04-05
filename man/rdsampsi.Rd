@@ -4,14 +4,43 @@
 \alias{rdsampsi}
 \title{Sample Size Calculations for RD Designs}
 \usage{
-rdsampsi(data = NULL, cutoff = 0, tau = NULL, alpha = 0.05,
-  beta = 0.8, samph = NULL, nsamples = NULL, all = FALSE,
-  bias = NULL, variance = NULL, nratio = NULL, init.cond = NULL,
-  plot = FALSE, graph.range = NULL, covs = NULL, deriv = 0,
-  p = 1, q = NULL, h = NULL, b = NULL, rho = NULL,
-  kernel = "triangular", bwselect = "mserd", vce = "nn",
-  cluster = NULL, scalepar = 1, scaleregul = 1, fuzzy = NULL,
-  level = 90)
+rdsampsi(
+  data = NULL,
+  cutoff = 0,
+  tau = NULL,
+  alpha = 0.05,
+  beta = 0.8,
+  samph = NULL,
+  nsamples = NULL,
+  all = FALSE,
+  bias = NULL,
+  variance = NULL,
+  nratio = NULL,
+  init.cond = NULL,
+  plot = FALSE,
+  graph.range = NULL,
+  covs = NULL,
+  covs_drop = TRUE,
+  deriv = 0,
+  p = 1,
+  q = NULL,
+  h = NULL,
+  b = NULL,
+  rho = NULL,
+  kernel = "triangular",
+  bwselect = "mserd",
+  vce = "nn",
+  cluster = NULL,
+  scalepar = 1,
+  scaleregul = 1,
+  fuzzy = NULL,
+  level = 95,
+  weights = NULL,
+  masspoints = "adjust",
+  bwcheck = NULL,
+  bwrestrict = TRUE,
+  stdvars = FALSE
+)
 }
 \arguments{
 \item{data}{a matrix (Y,R) containing the outcome variable and the running variable (as column vectors).}
@@ -44,6 +73,8 @@ rdsampsi(data = NULL, cutoff = 0, tau = NULL, alpha = 0.05,
 
 \item{covs}{option for \code{rdrobust()}: specifies additional covariates to be used for estimation and inference.}
 
+\item{covs_drop}{option for \code{rdrobust()}: if TRUE, it checks for collinear additional covariates and drops them. Default is TRUE.}
+
 \item{deriv}{option for \code{rdrobust()}: specifies the order of the derivative of the regression functions to be estimated.}
 
 \item{p}{option for \code{rdrobust()}: specifies the order of the local-polynomial used to construct the point-estimator.}
@@ -71,6 +102,16 @@ rdsampsi(data = NULL, cutoff = 0, tau = NULL, alpha = 0.05,
 \item{fuzzy}{option for \code{rdrobust()}: specifies the treatment status variable used to implement fuzzy RD estimation.}
 
 \item{level}{option for \code{rdrobust()}: sets the confidence level for confidence intervals.}
+
+\item{weights}{option for \code{rdrobust()}: is the variable used for optional weighting of the estimation procedure. The unit-specific weights multiply the kernel function.}
+
+\item{masspoints}{option for \code{rdrobust()}: checks and controls for repeated observations in tue running variable.}
+
+\item{bwcheck}{option for \code{rdrobust()}: if a positive integer is provided, the preliminary bandwidth used in the calculations is enlarged so that at least \code{bwcheck} unique observations are used.}
+
+\item{bwrestrict}{option for \code{rdrobust()}: if TRUE, computed bandwidths are restricted to lie withing the range of \code{x}. Default is \code{bwrestrict=TRUE}.}
+
+\item{stdvars}{option for \code{rdrobust()}: if \code{TRUE}, \code{x} and \code{y} are standardized before computing the bandwidths. Default is \code{stdvars=TRUE}.}
 }
 \value{
 \item{alpha}{significance level}
