@@ -1,6 +1,6 @@
 ###################################################################
 # rdsampsi: sample size calculations for RD designs
-# !version 0.5 03-Apr-2020
+# !version 1.0 23-Aug-2020
 # Authors: Matias Cattaneo, Rocio Titiunik, Gonzalo Vazquez-Bare
 ###################################################################
 
@@ -18,7 +18,7 @@
 #'
 #' @references
 #'
-#' M.D. Cattaneo, R. Titiunik and G. Vazquez-Bare. (2019). \href{https://sites.google.com/site/rdpackages/rdpower/Cattaneo-Titiunik-VazquezBare_2019_Stata.pdf}{Power Calculations for Regression Discontinuity Designs}. \emph{Stata Journal}, 19(1): 210-245.
+#' Cattaneo, M. D., R. Titiunik and G. Vazquez-Bare. (2019). \href{https://rdpackages.github.io/references/Cattaneo-Titiunik-VazquezBare_2019_Stata.pdf}{Power Calculations for Regression Discontinuity Designs}. \emph{Stata Journal}, 19(1): 210-245.
 #'
 #'
 #' @param data a matrix (Y,R) containing the outcome variable and the running variable (as column vectors).

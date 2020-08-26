@@ -1,6 +1,6 @@
 ###################################################################
 # rdpower: Power calculations for RD designs
-# !version 0.5 03-Apr-2020
+# !version 1.0 23-Aug-2020
 # Authors: Matias Cattaneo, Rocio Titiunik, Gonzalo Vazquez-Bare
 ###################################################################
 
@@ -14,7 +14,7 @@
 #' a desired power. This package relies on the \code{rdrobust} package. See Calonico, Cattaneo and Titiunik (2014, 2015) and
 #' Calonico, Cattaneo, Farrell and Titiunik (2017).
 #' For more details, and related \code{Stata} and \code{R} packages
-#' useful for analysis of RD designs, visit \url{https://sites.google.com/site/rdpackages}.
+#' useful for analysis of RD designs, visit \url{https://rdpackages.github.io/}.
 #'
 #' @author
 #' Matias Cattaneo, Princeton University. \email{cattaneo@princeton.edu}
@@ -25,13 +25,14 @@
 #'
 #' @references
 #'
-#' M.D. Cattaneo, R. Titiunik and G. Vazquez-Bare. (2019). \href{https://sites.google.com/site/rdpackages/rdpower/Cattaneo-Titiunik-VazquezBare_2019_Stata.pdf}{Power Calculations for Regression Discontinuity Designs}. \emph{Stata Journal}, 19(1): 210-245.
+#' Calonico, S., M. D. Cattaneo, M. Farrell and R. Titiunik. (2017).\href{https://rdpackages.github.io/references/Calonico-Cattaneo-Farrell-Titiunik_2017_Stata.pdf}{ \code{rdrobust}: Software for Regression Discontinuity Designs}. \emph{Stata Journal} 17(2): 372-404.
 #'
-#' M.D. Cattaneo, S. Calonico and R. Titiunik. (2014). \href{https://sites.google.com/site/rdpackages/rdrobust/Calonico-Cattaneo-Titiunik_2014_Stata.pdf}{Robust Data-Driven Inference in the Regression-Discontinuity Design}. \emph{Stata Journal 14(4): 909-946}.
+#' Calonico, S., M. D. Cattaneo, and R. Titiunik. (2014). \href{https://rdpackages.github.io/references/Calonico-Cattaneo-Titiunik_2014_Stata.pdf}{Robust Data-Driven Inference in the Regression-Discontinuity Design}. \emph{Stata Journal} 14(4): 909-946.
 #'
-#' M.D. Cattaneo, S. Calonico and R. Titiunik. (2015).\href{https://sites.google.com/site/rdpackages/rdrobust/Calonico-Cattaneo-Titiunik_2015_R.pdf}{ \code{rdrobust}: An R Package for Robust Nonparametric Inference in Regression-Discontinuity Designs}. \emph{R Journal 7(1): 38-51}.
+#' Calonico, S., M. D. Cattaneo, and R. Titiunik. (2015).\href{https://rdpackages.github.io/references/Calonico-Cattaneo-Titiunik_2015_R.pdf}{ \code{rdrobust}: An R Package for Robust Nonparametric Inference in Regression-Discontinuity Designs}. \emph{R Journal} 7(1): 38-51.
 #'
-#' M.D. Cattaneo, S. Calonico, M. Farrell and R. Titiunik. (2017).\href{https://sites.google.com/site/rdpackages/rdrobust/Calonico-Cattaneo-Farrell-Titiunik_2017_Stata.pdf}{ \code{rdrobust}: Software for Regression Discontinuity Designs}. \emph{Stata Journal 17(2): 372-404}.
+#' Cattaneo, M. D., R. Titiunik and G. Vazquez-Bare. (2019). \href{https://rdpackages.github.io/references/Cattaneo-Titiunik-VazquezBare_2019_Stata.pdf}{Power Calculations for Regression Discontinuity Designs}. \emph{Stata Journal}, 19(1): 210-245.
+#'
 #'
 #'
 #' @importFrom graphics abline

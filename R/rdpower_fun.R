@@ -1,6 +1,6 @@
 ###################################################################
 # Auxiliary functions for rdpower
-# !version 0.5 03-Apr-2020
+# !version 1.0 23-Aug-2020
 # Authors: Matias Cattaneo, Rocio Titiunik, Gonzalo Vazquez-Bare
 ###################################################################
 
