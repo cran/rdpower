@@ -1,12 +1,12 @@
 ###################################################################
-# rdsampsi: sample size calculations for RD designs
+# rdmde: minimum detectable effect calculations for RD designs
 # !version 2.0 17-Dec-2020
 # Authors: Matias Cattaneo, Rocio Titiunik, Gonzalo Vazquez-Bare
 ###################################################################
 
-#' Sample Size Calculations for RD Designs
+#' MDE Calculations for RD Designs
 #'
-#' \code{rdsampsi()} performs sample size calculations for RD designs.
+#' \code{rdmde()} performs MDE calculations for RD designs.
 #'
 #'
 #' @author
@@ -23,18 +23,15 @@
 #'
 #' @param data a matrix (Y,R) containing the outcome variable and the running variable (as column vectors).
 #' @param cutoff the RD cutoff (default is 0).
-#' @param tau specifies the treatment effect under the alternative at which the power function is evaluated. The default is half the standard deviation of the outcome for the untreated group.
 #' @param alpha specifies the significance level for the power function. Default is 0.05.
 #' @param beta specifies the desired power. Default is 0.8.
 #' @param nsamples sets the total sample size to the left, sample size to the left inside the bandwidth, total sample size to the right and sample size to the right of the cutoff inside the bandwidth to calculate the variance when the running variable is not specified. When not specified, the values are calculated using the running variable.
+#' @param sampsi sets the sample size at each side of the cutoff for power calculation. The first number is the sample size to the left of the cutoff and the second number is the sample size to the right. Default values are the sample sizes inside the chosen bandwidth.
 #' @param samph sets the bandwidths at each side of the cutoff for power calculation. The first number is the bandwidth to the left of the cutoff and the second number is the bandwidth to the right.  Default values are the bandwidths used by \code{rdrobust}.
 #' @param all displays the power using the conventional variance estimator, in addition to the robust bias corrected one.
 #' @param bias set bias to the left and right of the cutoff. If not specified, the biases are estimated using \code{rdrobust}.
 #' @param variance set variance to the left and right of the cutoff. If not specified, the variances are estimated using \code{rdrobust}.
-#' @param nratio specifies the proportion of treated units in the window. Default is the ratio of the standard deviation of the treated to the sum of the standard deviations for treated and controls.
-#' @param init.cond sets the initial condition for the Newton-Raphson algorithm that finds the sample size.  Default is the number of observations in the sample with non-missing values of the outcome and running variable.
-#' @param plot plots the power function using the conventional and robust bias corrected standard errors from \code{rdrobust}.
-#' @param graph.range range of the plot.
+#' @param init.cond sets the initial condition for the Newton-Raphson algorithm that finds the MDE.  Default is 0.2 times the standard deviation of the outcome below the cutoff.
 #' @param covs option for \code{rdrobust()}: specifies additional covariates to be used for estimation and inference.
 #' @param covs_drop option for \code{rdrobust()}: if TRUE, it checks for collinear additional covariates and drops them. Default is TRUE.
 #' @param deriv option for \code{rdrobust()}: specifies the order of the derivative of the regression functions to be estimated.
@@ -58,23 +55,21 @@
 #' @param stdvars option for \code{rdrobust()}: if \code{TRUE}, \code{x} and \code{y} are standardized before computing the bandwidths. Default is \code{stdvars=TRUE}.
 #'
 #' @return
-#' \item{alpha}{significance level}
-#' \item{beta}{desired power}
-#' \item{tau}{treatment effect under alternative hypothesis}
-#' \item{sampsi.h.tot}{total number of observations inside the window}
-#' \item{sampsi.h.r}{number of observations inside the window to the right of the cutoff}
-#' \item{sampsi.h.l}{number of observations inside the window to the left of the cutoff}
-#' \item{N.r}{Total sample size to the right of the cutoff}
-#' \item{N.l}{Total sample size to the left of the cutoff}
+#' \item{mde}{MDE using robust bias corrected standard error}
+#' \item{se.rbc}{robust bias corrected standard error}
+#' \item{sampsi.r}{number of observations inside the window to the right of the cutoff}
+#' \item{sampsi.l}{number of observations inside the window to the left of the cutoff}
 #' \item{samph.r}{bandwidth to the right of the cutoff}
 #' \item{samph.l}{bandwidth to the left of the cutoff}
-#' \item{var.r}{Robust bias corrected variance to the right of the cutoff}
-#' \item{Var.l}{Robust bias corrected variance to the left of the cutoff}
-#' \item{sampsi.h.tot.cl}{implied total number of observations inside the window using conventional s.e.}
-#' \item{sampsi.h.r.cl}{number of observations inside the window to the right of the cutoff using conventional s.e.}
-#' \item{sampsi.h.l.cl}{number of observations inside the window to the left of the cutoff using conventional s.e.}
-#' \item{no.iter}{number of iterations until convergence of the Newton-Raphson algorithm}
-#' \item{init.cond}{initial condition of the Newton-Raphson algorithm}
+#' \item{alpha}{significance level used in power function}
+#' \item{bias.r}{bias to the right of the cutoff}
+#' \item{bias.l}{bias to the left of the cutoff}
+#' \item{Vr.rb}{Robust bias corrected variance to the right of the cutoff}
+#' \item{Vl.rb}{Robust bias corrected variance to the left of the cutoff}
+#' \item{N.r}{Total sample size to the right of the cutoff}
+#' \item{N.l}{Total sample size to the left of the cutoff}
+#' \item{mde.conv}{MDE using conventional inference}
+#' \item{se.conv}{conventional standard error}
 #'
 #'
 #' @examples
@@ -82,50 +77,45 @@
 #' X <- array(rnorm(2000),dim=c(1000,2))
 #' R <- X[,1] + X[,2] + rnorm(1000)
 #' Y <- 1 + R -.5*R^2 + .3*R^3 + (R>=0) + rnorm(1000)
-#' # Sample size to achieve power of 0.8 against tau = 1
-#' tmp <- rdsampsi(data=cbind(Y,R),tau=1)
-#' # Sample size against tau = 1 including covariates
-#' tmp <- rdsampsi(data=cbind(Y,R),tau=1,covs=X)
+#' # MDE calculation
+#' tmp <- rdmde(data=cbind(Y,R),init.cond=0.5)
 #'
 #'
 #' @export
 
-rdsampsi <- function(data = NULL,
-                    cutoff = 0,
-                    tau = NULL,
-                    alpha = 0.05,
-                    beta = 0.8,
-                    samph = NULL,
-                    nsamples = NULL,
-                    all = FALSE,
-                    bias = NULL,
-                    variance = NULL,
-                    nratio = NULL,
-                    init.cond = NULL,
-                    plot = FALSE,
-                    graph.range = NULL,
+rdmde <- function(data = NULL,
+                  cutoff = 0,
+                  alpha = 0.05,
+                  beta = 0.8,
+                  nsamples = NULL,
+                  sampsi = NULL,
+                  samph = NULL,
+                  all = FALSE,
+                  bias = NULL,
+                  variance = NULL,
+                  init.cond = NULL,
 
-                    covs = NULL,
-                    covs_drop = TRUE,
-                    deriv = 0,
-                    p = 1,
-                    q = NULL,
-                    h = NULL,
-                    b = NULL,
-                    rho = NULL,
-                    kernel = 'triangular',
-                    bwselect = 'mserd',
-                    vce = 'nn',
-                    cluster = NULL,
-                    scalepar = 1,
-                    scaleregul = 1,
-                    fuzzy = NULL,
-                    level = 95,
-                    weights = NULL,
-                    masspoints = 'adjust',
-                    bwcheck = NULL,
-                    bwrestrict = TRUE,
-                    stdvars = FALSE){
+                  covs = NULL,
+                  covs_drop = TRUE,
+                  deriv = 0,
+                  p = 1,
+                  q = NULL,
+                  h = NULL,
+                  b = NULL,
+                  rho = NULL,
+                  kernel = 'triangular',
+                  bwselect = 'mserd',
+                  vce = 'nn',
+                  cluster = NULL,
+                  scalepar = 1,
+                  scaleregul = 1,
+                  fuzzy = NULL,
+                  level = 95,
+                  weights = NULL,
+                  masspoints = 'adjust',
+                  bwcheck = NULL,
+                  bwrestrict = TRUE,
+                  stdvars = FALSE){
 
   #################################################################
   # Options, default values and error checking
@@ -133,6 +123,7 @@ rdsampsi <- function(data = NULL,
 
   if (!is.null(data)){
     if (ncol(data)<2){stop('Too few variables specified in data')}
+    else if (ncol(data)>2){stop('Too many variables specified in data')}
     else{
       Y <- data[,1]
       R <- data[,2]
@@ -142,8 +133,9 @@ rdsampsi <- function(data = NULL,
   if (!is.null(nsamples)){
     if (!is.null(data)){warning('nsamples ignored when data is specified')}
     else{
+      if (!(!is.null(bias) & !is.null(variance) & !is.null(samph) & !is.null(init.cond))){stop('not enough information to calculate power without data')}
       if (length(nsamples)!=4){
-        stop('insufficient arguments in nsamples')
+        stop('incorrect number of arguments in nsamples')
       } else{
         if (sum(nsamples%%1)!=0){stop('sample sizes in nsamples have to be integers')}
         if (min(nsamples)<=0){stop('sample sizes in nsamples have to be >0')}
@@ -152,6 +144,20 @@ rdsampsi <- function(data = NULL,
         nplus <- nsamples[3]
         n.hnew.r <- nsamples[4]
       }
+    }
+  }
+
+  if (!is.null(sampsi)){
+    if (sum(sampsi%%1)!=0){stop('sample sizes in sampsi have to be integers')}
+    if (min(sampsi)<=0){stop('sample sizes in sampsi have to be >0')}
+    if (length(sampsi)==1){
+      ntilde.l <- sampsi
+      ntilde.r <- sampsi
+    } else if (length(sampsi)==2){
+      ntilde.l <- sampsi[1]
+      ntilde.r <- sampsi[2]
+    } else{
+      stop('sampsi incorrectly specified')
     }
   }
 
@@ -180,32 +186,21 @@ rdsampsi <- function(data = NULL,
     if (min(variance)<=0){stop('variances have to be >0')}
     if (length(variance)==1){stop('need to specify both Vl and Vr')}
     else if (length(variance)==2){
-      vl <- variance[1]
-      vr <- variance[2]
+      Vl.rb <- variance[1]
+      Vr.rb <- variance[2]
     }
     else {stop('variance incorrectly specified')}
-    if (is.null(data)){
-      vl.cl <- vl
-      vr.cl <- vr
-    }
-  }
-
-  if (!is.null(variance) & is.null(samph)){stop('need to set samph when variance is specified')}
-  if (!is.null(nratio)){
-    nratio.cl = nratio
-    if (nratio >= 1 | nratio <= 0){
-      stop('nratio has to be in (0,1)')
-    }
   }
 
   if (is.null(q)){ q <- p + 1}
 
 
   #################################################################
-  # Bias and variance
+  # Definition of bias, variance, sample sizes and bandwidths
   #################################################################
 
   if (!is.null(data)){
+
     if (is.null(bias) | is.null(variance)){
       aux <- rdrobust::rdrobust(Y,R,c=cutoff,all=TRUE,covs=covs,covs_drop=covs_drop,deriv=deriv,p=p,q=q,h=h,b=b,rho=rho,cluster=cluster,
                      kernel=kernel,bwselect=bwselect,vce=vce,scalepar=scalepar,scaleregul=scaleregul,
@@ -235,79 +230,22 @@ rdsampsi <- function(data = NULL,
           N <- sum(!is.na(Y) & !is.na(R))
         }
         pos <- 1 + deriv
-        vl <- N*(h.l^(1+2*deriv))*VL.RB[pos,pos]
-        vr <- N*(h.r^(1+2*deriv))*VR.RB[pos,pos]
-        vl.cl <- N*(h.l^(1+2*deriv))*VL.CL[pos,pos]
-        vr.cl <- N*(h.r^(1+2*deriv))*VR.CL[pos,pos]
+        Vl.cl <- N*(h.l^(1+2*deriv))*VL.CL[pos,pos]
+        Vr.cl <- N*(h.r^(1+2*deriv))*VR.CL[pos,pos]
+        Vl.rb <- N*(h.l^(1+2*deriv))*VL.RB[pos,pos]
+        Vr.rb <- N*(h.r^(1+2*deriv))*VR.RB[pos,pos]
       }
     }
+
+    ## Set default new bandwith
 
     if (is.null(samph)){
       hnew.l <- h.l
       hnew.r <- h.r
     }
 
-    if (is.null(vl.cl) | is.null(vr.cl)){
-      vl.cl <- vl
-      vr.cl <- vr
-    }
-  }
+    ## Calculate sample sizes
 
-  # Bias adjustment
-
-  bias <- bias.r*hnew.r^(1+p-deriv) + bias.l*hnew.l^(1+p-deriv)
-
-  # Variance adjustment
-
-  V.rbc <- vl/(hnew.l^(1+2*deriv)) + vr/(hnew.r^(1+2*deriv))
-  stilde <- sqrt(V.rbc)
-  V.cl <- vl.cl/(hnew.l^(1+2*deriv)) + vr.cl/(hnew.r^(1+2*deriv))
-  stilde.cl <- sqrt(V.cl)
-
-
-  #################################################################
-  # Sample size calculation
-  #################################################################
-
-  # Critical value
-
-  z <- qnorm(1-alpha/2)
-
-  # Set default value of tau
-
-  if (is.null(tau)){
-    sd0 <- sd(Y[R>=cutoff-hnew.l & R<cutoff],na.rm=TRUE)
-    tau <- 0.5*sd0
-  }
-
-  # Set initial value for Newton-Raphson
-
-  if (is.null(init.cond)){
-    init.cond <- sum(!is.na(Y) & !is.na(R))
-  }
-
-  # Find m
-
-  cat('Calculating sample size...')
-
-  maux <- rdpower.powerNR(init.cond,tau,stilde,z,beta)
-  m <- maux$m
-
-  if (all==TRUE){
-    maux1 <- rdpower.powerNR(init.cond,tau+bias,stilde.cl,z,beta)
-    m.cl <- maux1$m
-  }
-
-  cat('Sample size obtained.')
-
-  # Adjust m to find sample sizes
-
-  if (is.null(nratio)){
-    nratio <- sqrt(vr)/(sqrt(vr)+sqrt(vl))
-    nratio.cl <- sqrt(vr.cl)/(sqrt(vr.cl)+sqrt(vl.cl))
-  }
-
-  if (!is.null(data)){
     if (!is.null(cluster)){
       N <- length(table(cluster[!is.na(Y)&!is.na(R)]))
       nplus <- length(table(cluster[R>=cutoff & !is.na(Y) & !is.na(R)]))
@@ -321,22 +259,97 @@ rdsampsi <- function(data = NULL,
       n.hnew.r <- sum(R>=cutoff & R<= cutoff + hnew.r & !is.na(Y) & !is.na(R))
       n.hnew.l <- sum(R<cutoff & R>= cutoff - hnew.l & !is.na(Y) & !is.na(R))
     }
+
   }
 
-  denom <- nratio*nplus/n.hnew.r + (1-nratio)*nminus/n.hnew.l
-  denom.cl <- nratio.cl*nplus/n.hnew.r + (1-nratio.cl)*nminus/n.hnew.l
+  if (is.null(sampsi)){
+    ntilde.l <- n.hnew.l
+    ntilde.r <- n.hnew.r
+  }
 
-  M <- m/denom
-  Mr <- ceiling(M*nratio)
-  Ml <- ceiling(M*(1-nratio))
-  M <- Ml + Mr
+  ntilde <- nplus*ntilde.r/n.hnew.r + nminus*ntilde.l/n.hnew.l
+
+
+  #################################################################
+  # Variance and bias adjustment
+  #################################################################
+
+  ## Variance adjustment
+
+  V.rbc <- Vl.rb/(hnew.l^(1+2*deriv)) + Vr.rb/(hnew.r^(1+2*deriv))
+  se.rbc <- sqrt(V.rbc)
 
   if (all==TRUE){
-    M.cl <- m.cl/denom.cl
-    Mr.cl <- ceiling(M.cl*nratio.cl)
-    Ml.cl <- ceiling(M.cl*(1-nratio.cl))
-    M.cl <- Ml.cl + Mr.cl
+    V.conv <- Vl.cl/(hnew.l^(1+2*deriv)) + Vr.cl/(hnew.r^(1+2*deriv))
+    se.conv <- sqrt(V.conv)
+  } else{
+    V.conv <- V.rbc
+    se.conv <- se.rbc
   }
+
+  ## Bias adjustment
+
+  bias <- bias.r*hnew.r^(1+p-deriv) + bias.l*hnew.l^(1+p-deriv)
+
+  #################################################################
+  # MDE calculation
+  #################################################################
+
+
+  ## Set initial condition for Newton-Raphson
+
+  if (is.null(init.cond)){
+    sd0 <- sd(Y[R<cutoff],na.rm=TRUE)
+    tau0 <- 0.2*sd0
+  } else{
+    tau0 <- init.cond
+  }
+
+  cat('Calculating MDE...')
+
+  mde.aux <- rdpower.powerNR.mde(ntilde,tau0,se.rbc,qnorm(1-alpha/2),beta)
+  mde <- mde.aux$mde
+
+  beta.list <- numeric(4)
+  mde.rbc.list <- numeric(4)
+
+  count <- 1
+  for (r in c(-0.125,-0.0625,0.0625,0.125)){
+
+    baux <- beta*(1+r)
+    beta.list[count] <- baux
+
+    if (baux<1){
+      rdpow.aux <- rdpower.powerNR.mde(ntilde,tau0,se.rbc,qnorm(1-alpha/2),baux)
+      mde.rbc.list[count] <- rdpow.aux$mde
+
+    }
+
+    count <- count + 1
+  }
+
+  if(all==TRUE){
+    mde.conv.aux <- rdpower.powerNR.mde(ntilde,tau0+bias,se.conv,qnorm(1-alpha/2),beta)
+    mde.conv <- mde.conv.aux$mde
+
+    mde.conv.list <- numeric(4)
+    count <- 1
+    for (r in c(-0.125,-0.0625,0.0625,0.125)){
+
+      baux <- beta*(1+r)
+
+      if (baux<1){
+        rdpow.conv.aux <- rdpower.powerNR.mde(ntilde,tau0+bias,se.conv,qnorm(1-alpha/2),baux)
+        mde.conv.list[count] <- rdpow.conv.aux$mde
+
+      }
+
+      count <- count + 1
+    }
+
+  }
+
+  cat('MDE obtained')
 
   #################################################################
   # Descriptive statistics for display
@@ -362,21 +375,21 @@ rdsampsi <- function(data = NULL,
       hr <- h.r
     }
 
-    n.hnew.r.disp <- sum(R>=cutoff & R<= cutoff + hr & !is.na(Y) & !is.na(R))
-    n.hnew.l.disp <- sum(R<cutoff & R>= cutoff - hl & !is.na(Y) & !is.na(R))
+    nhr.disp <- sum(R>=cutoff & R<= cutoff + hr & !is.na(Y) & !is.na(R))
+    nhl.disp <- sum(R<cutoff & R>= cutoff - hl & !is.na(Y) & !is.na(R))
 
     # Right panel
 
     N.disp <- sum(!is.na(Y) & !is.na(R))
 
-    if (is.null(bias) | is.null(variance)){
-      bwselect <- aux$bwselect
-      kernel_type <- aux$kernel
-      vce_type <- aux$vce
-    } else{
+    if (!is.null(bias) & !is.null(variance)){
       bwselect <- NA
       kernel_type <- NA
       vce_type <- NA
+    } else{
+      bwselect <- aux$bwselect
+      kernel_type <- aux$kernel
+      vce_type <- aux$vce
     }
 
 
@@ -390,8 +403,8 @@ rdsampsi <- function(data = NULL,
     }
     nplus.disp <- NA
     nminus.disp <- NA
-    n.hnew.l.disp <- NA
-    n.hnew.r.disp <- NA
+    nhr.disp <- NA
+    nhl.disp <- NA
 
     hl <- NA
     hr <- NA
@@ -405,8 +418,6 @@ rdsampsi <- function(data = NULL,
     vce_type <- NA
   }
 
-
-
   #################################################################
   # Output
   #################################################################
@@ -417,105 +428,77 @@ rdsampsi <- function(data = NULL,
   cat(paste0(format('Kernel type   =', width=22), kernel_type)); cat("\n")
   cat(paste0(format('VCE method    =', width=22), vce_type)); cat("\n")
   cat(paste0(format('Derivative    =', width=22), toString(deriv))); cat("\n")
-  cat(paste0(format('HA:       tau =', width=22), round(tau,3))); cat("\n")
-  cat(paste0(format('Power         =', width=22), round(beta,3))); cat("\n")
   cat('\n\n')
 
   cat(paste0(format(paste0("Cutoff c = ", toString(round(cutoff, 3))), width=22), format("Left of c", width=16), format("Right of c", width=16))); cat("\n")
   cat(paste0(format("Number of obs",      width=22), format(toString(nminus.disp),     width=16), format(toString(nplus.disp),        width=16))); cat("\n")
-  cat(paste0(format("Eff. number of obs", width=22), format(toString(n.hnew.l.disp),   width=16), format(toString(n.hnew.r.disp),     width=16))); cat("\n")
+  cat(paste0(format("Eff. number of obs", width=22), format(toString(nhl.disp),        width=16), format(toString(nhr.disp),          width=16))); cat("\n")
   cat(paste0(format("BW loc. poly.",      width=22), format(toString(round(hl,3)),     width=16), format(toString(round(hr,3)),       width=16))); cat("\n")
   cat(paste0(format("Order loc. poly.",   width=22), format(toString(p),               width=16), format(toString(p),                 width=16))); cat("\n")
   cat(paste0(format("Sampling BW",        width=22), format(toString(round(hnew.l,3)), width=16), format(toString(round(hnew.r,3)),   width=16))); cat("\n")
+  cat(paste0(format("New sample",         width=22), format(toString(ntilde.l),        width=16), format(toString(ntilde.r),          width=16))); cat("\n")
   cat("\n\n")
 
   cat(paste0(rep('=',89),collapse='')); cat('\n')
-  cat(paste0(format('Chosen sample sizes',   width=33),
-             format('Sample size in window', width=35),
-             format('Proportion',            width=15))); cat('\n')
+  cat(paste0(format('MDE for power = ', width=25),
+             format('beta = ',     width=15),
+             format('beta = ',     width=15),
+             format('beta = ',     width=15),
+             format('beta = ',     width=13),
+             format('beta = ',         width=15))); cat('\n')
 
-  cat(paste0(format('',        width=25),
-             format('[c-h,c)', width=15),
-             format('[c,c+h]', width=15),
-             format('Total',   width=15),
-             format('[c,c+h]', width=13))); cat('\n')
+  cat(paste0(format('', width=25),
+             format(toString(round(beta.list[1],3)), width=15),
+             format(toString(round(beta.list[2],3)), width=15),
+             format(toString(round(beta,3))        , width=15),
+             format(toString(round(beta.list[3],3)), width=13),
+             format(toString(round(beta.list[4],3)), width=15))); cat('\n')
   cat(paste0(rep('-',89),collapse='')); cat('\n')
   cat(paste0(format('Robust bias-corrected', width=25),
-             format(toString(Ml), width=15),
-             format(toString(Mr), width=15),
-             format(toString(M), width=15),
-             format(toString(round(nratio,3)), width=13)))
+             format(toString(round(mde.rbc.list[1],3)), width=15),
+             format(toString(round(mde.rbc.list[2],3)), width=15),
+             format(toString(round(mde,3))            , width=15),
+             format(toString(round(mde.rbc.list[3],3)), width=13),
+             format(toString(round(mde.rbc.list[4],3)), width=15)));
 
   if (all==TRUE){
     cat('\n')
     cat(paste0(format('Conventional', width=25),
-               format(toString(Ml.cl), width=15),
-               format(toString(Mr.cl), width=15),
-               format(toString(M.cl), width=15),
-               format(toString(round(nratio.cl,3)), width=13))); cat('\n')
+               format(toString(round(mde.conv.list[1],3)), width=15),
+               format(toString(round(mde.conv.list[2],3)), width=15),
+               format(toString(round(mde.conv,3))        , width=15),
+               format(toString(round(mde.conv.list[3],3)), width=13),
+               format(toString(round(mde.conv.list[4],3)), width=15))); cat('\n')
     cat(paste0(rep('=',89),collapse='')); cat('\n')
+
   } else {cat('\n');cat(paste0(rep('=',89),collapse=''));cat('\n\n')}
 
-
-  #################################################################
-  # Power function plot
-  #################################################################
-
-  if (plot==TRUE){
-
-    N.plot <- sum(!is.na(Y) & !is.na(R))
-
-    if(is.null(graph.range)){
-      left <- 0
-      right <- N.plot
-    } else{
-      left <- graph.range[1]
-      right <- graph.range[2]
-    }
-
-    plot(function(x) 1 - pnorm(sqrt(x*denom)*tau/stilde+qnorm(1-alpha/2)) + pnorm(sqrt(x*denom)*tau/stilde-qnorm(1-alpha/2)),
-          from=left,to=right,xlab='total sample size in window',ylab='power',xlim=c(left,right))
-    title('Power function')
-    abline(v=M,lty=2,col='gray50')
-    abline(h=beta,lty=2,col='gray50')
-    if (all==TRUE){
-      plot(function(x) 1 - pnorm(sqrt(x*denom.cl)*(tau+bias)/stilde.cl+qnorm(1-alpha/2)) + pnorm(sqrt(x*denom.cl)*(tau+bias)/stilde.cl-qnorm(1-alpha/2)),
-            add=TRUE,lty=2)
-      legend('bottomleft',legend=c('robust bc','conventional'),lty=c(1,2),bty='n')
-    }
-  }
 
   #################################################################
   # Return values
   #################################################################
 
-  output <- list(sampsi.h.tot = M,
-                sampsi.h.r = Mr,
-                sampsi.h.l = Ml,
-                sampsi.tot = m,
-                N.r = nplus,
-                N.l = nminus,
-                Nh.r = n.hnew.r,
-                Nh.l = n.hnew.l,
-                bias.r = bias.r,
-                bias.l = bias.r,
-                var.r = vr,
-                var.l = vl,
+  output <- list(mde = mde,
+                se.rbc = se.rbc,
+                sampsi.r = ntilde.r,
+                sampsi.l = ntilde.l,
                 samph.r = hnew.r,
                 samph.l = hnew.l,
-                tau = tau,
-                beta = beta,
+                N.r = nplus,
+                N.l = nminus,
+                Nh.l = n.hnew.l,
+                Nh.r = n.hnew.r,
+                bias.r = bias.r,
+                bias.l = bias.l,
+                Vr.rb = Vr.rb,
+                Vl.rb = Vl.rb,
                 alpha = alpha,
-                init.cond = init.cond,
-                no.iter = maux$iter)
+                beta = beta)
+
   if (all==TRUE){
     output <- c(output,
-               sampsi.h.tot.cl = M.cl,
-               sampsi.h.r.cl = Mr.cl,
-               sampsi.h.l.cl = Ml.cl,
-               sampsi.tot.cl = m.cl,
-               var.r.cl = vr.cl,
-               var.l.cl = vl.cl)
+               mde.conv = mde.conv,
+               se.conv = se.conv)
   }
 
   return(output)

@@ -9,9 +9,9 @@
 \description{
 The regression discontinuity (RD) design is a popular quasi-experimental design
 for causal inference and policy evaluation. The \code{'rdpower'} package provides tools
-to perform power and sample size calculations in RD designs: \code{\link{rdpower}()} calculates
-the power of an RD design and \code{\link{rdsampsi}()} calculates the required sample size to achieve
-a desired power. This package relies on the \code{rdrobust} package. See Calonico, Cattaneo and Titiunik (2014, 2015) and
+to perform power, sample size and MDE calculations in RD designs: \code{\link{rdpower}()} calculates
+the power of an RD design, \code{\link{rdsampsi}()} calculates the required sample size to achieve
+a desired power and \code{\link{rdmde}()} calculates minimum detectable effects. This package relies on the \code{rdrobust} package. See Calonico, Cattaneo and Titiunik (2014, 2015) and
 Calonico, Cattaneo, Farrell and Titiunik (2017).
 For more details, and related \code{Stata} and \code{R} packages
 useful for analysis of RD designs, visit \url{https://rdpackages.github.io/}.

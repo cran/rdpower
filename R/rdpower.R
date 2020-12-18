@@ -1,6 +1,6 @@
 ###################################################################
 # rdpower: power calculations for RD designs
-# !version 1.0 23-Aug-2020
+# !version 2.0 17-Dec-2020
 # Authors: Matias Cattaneo, Rocio Titiunik, Gonzalo Vazquez-Bare
 ###################################################################
 
@@ -87,7 +87,7 @@
 #'
 #' @export
 
-rdpower = function(data = NULL,
+rdpower <- function(data = NULL,
                    cutoff = 0,
                    tau = NULL,
                    alpha = 0.05,
@@ -130,8 +130,8 @@ rdpower = function(data = NULL,
     if (ncol(data)<2){stop('Too few variables specified in data')}
     else if (ncol(data)>2){stop('Too many variables specified in data')}
     else{
-      Y = data[,1]
-      R = data[,2]
+      Y <- data[,1]
+      R <- data[,2]
     }
   }
 
@@ -144,10 +144,10 @@ rdpower = function(data = NULL,
       } else{
         if (sum(nsamples%%1)!=0){stop('sample sizes in nsamples have to be integers')}
         if (min(nsamples)<=0){stop('sample sizes in nsamples have to be >0')}
-        nminus = nsamples[1]
-        n.hnew.l = nsamples[2]
-        n.hnew.r = nsamples[3]
-        nplus = nsamples[4]
+        nminus <- nsamples[1]
+        n.hnew.l <- nsamples[2]
+        nplus <- nsamples[3]
+        n.hnew.r <- nsamples[4]
       }
     }
   }
@@ -156,11 +156,11 @@ rdpower = function(data = NULL,
     if (sum(sampsi%%1)!=0){stop('sample sizes in sampsi have to be integers')}
     if (min(sampsi)<=0){stop('sample sizes in sampsi have to be >0')}
     if (length(sampsi)==1){
-      ntilde.l = sampsi
-      ntilde.r = sampsi
+      ntilde.l <- sampsi
+      ntilde.r <- sampsi
     } else if (length(sampsi)==2){
-      ntilde.l = sampsi[1]
-      ntilde.r = sampsi[2]
+      ntilde.l <- sampsi[1]
+      ntilde.r <- sampsi[2]
     } else{
       stop('sampsi incorrectly specified')
     }
@@ -168,11 +168,11 @@ rdpower = function(data = NULL,
 
   if (!is.null(samph)){
     if (length(samph)==1){
-      hnew.l = samph
-      hnew.r = samph
+      hnew.l <- samph
+      hnew.r <- samph
     } else if (length(samph)==2){
-      hnew.l = samph[1]
-      hnew.r = samph[2]
+      hnew.l <- samph[1]
+      hnew.r <- samph[2]
     } else{
       stop('samph incorrectly specified')
     }
@@ -181,8 +181,8 @@ rdpower = function(data = NULL,
   if (!is.null(bias)){
     if (length(bias)==1){stop('need to specify both Bl and Br')}
     else if (length(bias)==2){
-      bias.l = bias[1]
-      bias.r = bias[2]
+      bias.l <- bias[1]
+      bias.r <- bias[2]
     }
     else {stop('bias incorrectly specified')}
   }
@@ -191,13 +191,13 @@ rdpower = function(data = NULL,
     if (min(variance)<=0){stop('variances have to be >0')}
     if (length(variance)==1){stop('need to specify both Vl and Vr')}
     else if (length(variance)==2){
-      Vl.rb = variance[1]
-      Vr.rb = variance[2]
+      Vl.rb <- variance[1]
+      Vr.rb <- variance[2]
     }
     else {stop('variance incorrectly specified')}
   }
 
-  if (is.null(q)){ q = p + 1}
+  if (is.null(q)){ q <- p + 1}
 
 
   #################################################################
@@ -207,78 +207,78 @@ rdpower = function(data = NULL,
   if (!is.null(data)){
 
     if (is.null(bias) | is.null(variance)){
-      aux = rdrobust::rdrobust(Y,R,c=cutoff,all=TRUE,covs=covs,covs_drop=covs_drop,deriv=deriv,p=p,q=q,h=h,b=b,rho=rho,cluster=cluster,
+      aux <- rdrobust::rdrobust(Y,R,c=cutoff,all=TRUE,covs=covs,covs_drop=covs_drop,deriv=deriv,p=p,q=q,h=h,b=b,rho=rho,cluster=cluster,
                      kernel=kernel,bwselect=bwselect,vce=vce,scalepar=scalepar,scaleregul=scaleregul,
                      fuzzy=fuzzy,level=level,weights=weights,masspoints=masspoints,bwcheck=bwcheck,bwrestrict=bwrestrict,stdvars=stdvars)
 
-      h.aux = aux$bws
-      h.l = h.aux[1,1]
-      h.r = h.aux[1,2]
-      nh.l = aux$Nh[1]
-      nh.r = aux$Nh[2]
+      h.aux <- aux$bws
+      h.l <- h.aux[1,1]
+      h.r <- h.aux[1,2]
+      nh.l <- aux$Nh[1]
+      nh.r <- aux$Nh[2]
 
       if (is.null(bias)){
-        bias = aux$bias
-        bias.l = bias[1]/(h.l^(1+p-deriv))
-        bias.r = bias[2]/(h.r^(1+p-deriv))
+        bias <- aux$bias
+        bias.l <- bias[1]/(h.l^(1+p-deriv))
+        bias.r <- bias[2]/(h.r^(1+p-deriv))
       }
 
       if (is.null(variance)){
-        VL.CL = aux$V_cl_l
-        VR.CL = aux$V_cl_r
-        VL.RB = aux$V_rb_l
-        VR.RB = aux$V_rb_r
+        VL.CL <- aux$V_cl_l
+        VR.CL <- aux$V_cl_r
+        VL.RB <- aux$V_rb_l
+        VR.RB <- aux$V_rb_r
 
         if (!is.null(cluster)){
-          N = length(table(cluster[!is.na(Y) & !is.na(R)]))
+          N <- length(table(cluster[!is.na(Y) & !is.na(R)]))
         } else{
-          N = sum(!is.na(Y) & !is.na(R))
+          N <- sum(!is.na(Y) & !is.na(R))
         }
-        pos = 1 + deriv
-        Vl.cl = N*(h.l^(1+2*deriv))*VL.CL[pos,pos]
-        Vr.cl = N*(h.r^(1+2*deriv))*VR.CL[pos,pos]
-        Vl.rb = N*(h.l^(1+2*deriv))*VL.RB[pos,pos]
-        Vr.rb = N*(h.r^(1+2*deriv))*VR.RB[pos,pos]
+        pos <- 1 + deriv
+        Vl.cl <- N*(h.l^(1+2*deriv))*VL.CL[pos,pos]
+        Vr.cl <- N*(h.r^(1+2*deriv))*VR.CL[pos,pos]
+        Vl.rb <- N*(h.l^(1+2*deriv))*VL.RB[pos,pos]
+        Vr.rb <- N*(h.r^(1+2*deriv))*VR.RB[pos,pos]
       }
     }
 
     ## Set default new bandwith
 
     if (is.null(samph)){
-      hnew.l = h.l
-      hnew.r = h.r
+      hnew.l <- h.l
+      hnew.r <- h.r
     }
 
     ## Set default value of tau
 
     if (is.null(tau)){
-      sd0 = sd(Y[R>=cutoff-hnew.l & R<cutoff],na.rm=TRUE)
-      tau = 0.5*sd0
+      sd0 <- sd(Y[R>=cutoff-hnew.l & R<cutoff],na.rm=TRUE)
+      tau <- 0.5*sd0
     }
 
     ## Calculate sample sizes
 
     if (!is.null(cluster)){
-      N = length(table(cluster[!is.na(Y)&!is.na(R)]))
-      nplus = length(table(cluster[R>=cutoff & !is.na(Y) & !is.na(R)]))
-      nminus = length(table(cluster[R<cutoff & !is.na(Y) & !is.na(R)]))
-      n.hnew.r = length(table(cluster[R>=cutoff & R<= cutoff + hnew.r & !is.na(Y) & !is.na(R)]))
-      n.hnew.l = length(table(cluster[R<cutoff & R>= cutoff - hnew.l & !is.na(Y) & !is.na(R)]))
+      N <- length(table(cluster[!is.na(Y)&!is.na(R)]))
+      nplus <- length(table(cluster[R>=cutoff & !is.na(Y) & !is.na(R)]))
+      nminus <- length(table(cluster[R<cutoff & !is.na(Y) & !is.na(R)]))
+      n.hnew.r <- length(table(cluster[R>=cutoff & R<= cutoff + hnew.r & !is.na(Y) & !is.na(R)]))
+      n.hnew.l <- length(table(cluster[R<cutoff & R>= cutoff - hnew.l & !is.na(Y) & !is.na(R)]))
     } else{
-      N = sum(!is.na(Y) & !is.na(R))
-      nplus = sum(R>=cutoff & !is.na(Y) & !is.na(R))
-      nminus = sum(R<cutoff & !is.na(Y) & !is.na(R))
-      n.hnew.r = sum(R>=cutoff & R<= cutoff + hnew.r & !is.na(Y) & !is.na(R))
-      n.hnew.l = sum(R<cutoff & R>= cutoff - hnew.l & !is.na(Y) & !is.na(R))
+      N <- sum(!is.na(Y) & !is.na(R))
+      nplus <- sum(R>=cutoff & !is.na(Y) & !is.na(R))
+      nminus <- sum(R<cutoff & !is.na(Y) & !is.na(R))
+      n.hnew.r <- sum(R>=cutoff & R<= cutoff + hnew.r & !is.na(Y) & !is.na(R))
+      n.hnew.l <- sum(R<cutoff & R>= cutoff - hnew.l & !is.na(Y) & !is.na(R))
     }
 
     if (is.null(sampsi)){
-      ntilde.l = n.hnew.l
-      ntilde.r = n.hnew.r
+      ntilde.l <- n.hnew.l
+      ntilde.r <- n.hnew.r
     }
   }
 
-  ntilde = nplus*ntilde.r/n.hnew.r + nminus*ntilde.l/n.hnew.l
+  ntilde <- nplus*ntilde.r/n.hnew.r + nminus*ntilde.l/n.hnew.l
 
 
   #################################################################
@@ -287,40 +287,40 @@ rdpower = function(data = NULL,
 
   ## Variance adjustment
 
-  V.rbc = Vl.rb/(ntilde*(hnew.l^(1+2*deriv))) + Vr.rb/(ntilde*(hnew.r^(1+2*deriv)))
-  se.rbc = sqrt(V.rbc)
+  V.rbc <- Vl.rb/(ntilde*(hnew.l^(1+2*deriv))) + Vr.rb/(ntilde*(hnew.r^(1+2*deriv)))
+  se.rbc <- sqrt(V.rbc)
 
   if (all==TRUE){
-    V.conv = Vl.cl/(ntilde*(hnew.l^(1+2*deriv))) + Vr.cl/(ntilde*(hnew.r^(1+2*deriv)))
-    se.conv = sqrt(V.conv)
+    V.conv <- Vl.cl/(ntilde*(hnew.l^(1+2*deriv))) + Vr.cl/(ntilde*(hnew.r^(1+2*deriv)))
+    se.conv <- sqrt(V.conv)
   } else{
-    V.conv = V.rbc
-    se.conv = se.rbc
+    V.conv <- V.rbc
+    se.conv <- se.rbc
   }
 
   ## Bias adjustment
 
-  bias = bias.r*hnew.r^(1+p-deriv) + bias.l*hnew.l^(1+p-deriv)
+  bias <- bias.r*hnew.r^(1+p-deriv) + bias.l*hnew.l^(1+p-deriv)
 
   #################################################################
   # Power calculation
   #################################################################
 
-  power.rbc = 1 - pnorm((tau)/se.rbc+qnorm(1-alpha/2)) + pnorm((tau)/se.rbc-qnorm(1-alpha/2))
-  power.conv = 1 - pnorm((tau+bias)/se.conv+qnorm(1-alpha/2)) + pnorm((tau+bias)/se.conv-qnorm(1-alpha/2))
+  power.rbc <- 1 - pnorm((tau)/se.rbc+qnorm(1-alpha/2)) + pnorm((tau)/se.rbc-qnorm(1-alpha/2))
+  power.conv <- 1 - pnorm((tau+bias)/se.conv+qnorm(1-alpha/2)) + pnorm((tau+bias)/se.conv-qnorm(1-alpha/2))
 
-  power.rbc.list = NULL
-  power.conv.list = NULL
+  power.rbc.list <- NULL
+  power.conv.list <- NULL
 
   for (r in c(0,2,5,8)){
 
     te = tau*r/10
 
-    power.rbc.aux = 1 - pnorm((te)/se.rbc+qnorm(1-alpha/2)) + pnorm((te)/se.rbc-qnorm(1-alpha/2))
-    power.conv.aux = 1 - pnorm((te+bias)/se.conv+qnorm(1-alpha/2)) + pnorm((te+bias)/se.conv-qnorm(1-alpha/2))
+    power.rbc.aux <- 1 - pnorm((te)/se.rbc+qnorm(1-alpha/2)) + pnorm((te)/se.rbc-qnorm(1-alpha/2))
+    power.conv.aux <- 1 - pnorm((te+bias)/se.conv+qnorm(1-alpha/2)) + pnorm((te+bias)/se.conv-qnorm(1-alpha/2))
 
-    power.rbc.list = c(power.rbc.aux,power.rbc.list)
-    power.conv.list = c(power.conv.aux,power.conv.list)
+    power.rbc.list <- c(power.rbc.aux,power.rbc.list)
+    power.conv.list <- c(power.conv.aux,power.conv.list)
 
   }
 
@@ -333,41 +333,37 @@ rdpower = function(data = NULL,
     # Left panel
 
     if (!is.null(cluster)){
-      gplus = length(table(cluster[R>=cutoff & !is.na(Y) & !is.na(R)]))
-      gminus = length(table(cluster[R<cutoff & !is.na(Y) & !is.na(R)]))
+      gplus <- length(table(cluster[R>=cutoff & !is.na(Y) & !is.na(R)]))
+      gminus <- length(table(cluster[R<cutoff & !is.na(Y) & !is.na(R)]))
     }
 
-    nplus.disp = sum(R>=cutoff & !is.na(Y) & !is.na(R))
-    nminus.disp = sum(R<cutoff & !is.na(Y) & !is.na(R))
+    nplus.disp <- sum(R>=cutoff & !is.na(Y) & !is.na(R))
+    nminus.disp <- sum(R<cutoff & !is.na(Y) & !is.na(R))
 
     if (is.null(h)){
-      hl = hnew.l
-      hr = hnew.r
+      hl <- hnew.l
+      hr <- hnew.r
     } else{
-      hl = h.l
-      hr = h.r
+      hl <- h.l
+      hr <- h.r
     }
 
-    nhr.disp = sum(R>=cutoff & R<= cutoff + hr & !is.na(Y) & !is.na(R))
-    nhl.disp = sum(R<cutoff & R>= cutoff - hl & !is.na(Y) & !is.na(R))
+    nhr.disp <- sum(R>=cutoff & R<= cutoff + hr & !is.na(Y) & !is.na(R))
+    nhl.disp <- sum(R<cutoff & R>= cutoff - hl & !is.na(Y) & !is.na(R))
 
-    # if (is.null(h)){
-    #   hl = NA
-    #   hr = NA
-    # }
 
     # Right panel
 
-    N.disp = sum(!is.na(Y) & !is.na(R))
+    N.disp <- sum(!is.na(Y) & !is.na(R))
 
     if (!is.null(bias) & !is.null(variance)){
-      bwselect = NA
-      kernel_type = NA
-      vce_type = NA
+      bwselect <- NA
+      kernel_type <- NA
+      vce_type <- NA
     } else{
-      bwselect = aux$bwselect
-      kernel_type = aux$kernel
-      vce_type = aux$vce
+      bwselect <- aux$bwselect
+      kernel_type <- aux$kernel
+      vce_type <- aux$vce
     }
 
 
@@ -376,24 +372,24 @@ rdpower = function(data = NULL,
     # Left panel
 
     if (!is.null(cluster)){
-      gplus = NA
-      gminus = NA
+      gplus <- NA
+      gminus <- NA
     }
-    nplus.disp = NA
-    nminus.disp = NA
-    nhr.disp = NA
-    nhl.disp = NA
+    nplus.disp <- NA
+    nminus.disp <- NA
+    nhr.disp <- NA
+    nhl.disp <- NA
 
-    hl = NA
-    hr = NA
-    p = NA
+    hl <- NA
+    hr <- NA
+    p <- NA
 
     # Right panel
 
-    N.disp = NA
-    bwselect = NA
-    kernel_type = NA
-    vce_type = NA
+    N.disp <- NA
+    bwselect <- NA
+    kernel_type <- NA
+    vce_type <- NA
   }
 
   #################################################################
@@ -418,6 +414,7 @@ rdpower = function(data = NULL,
   cat(paste0(format("New sample",         width=22), format(toString(ntilde.l),        width=16), format(toString(ntilde.r),          width=16))); cat("\n")
   cat("\n\n")
 
+  cat(paste0(rep('=',89),collapse='')); cat('\n')
   cat(paste0(format('Power against:', width=25),
              format('H0: tau = ',     width=15),
              format('0.2*tau = ',     width=15),
@@ -431,7 +428,7 @@ rdpower = function(data = NULL,
              format(toString(round(0.5*tau,3)), width=15),
              format(toString(round(0.8*tau,3)), width=13),
              format(toString(round(tau,3)),     width=15))); cat('\n')
-
+  cat(paste0(rep('-',89),collapse='')); cat('\n')
   cat(paste0(format('Robust bias-corrected', width=25),
              format(toString(round(power.rbc.list[4],3)), width=15),
              format(toString(round(power.rbc.list[3],3)), width=15),
@@ -447,7 +444,9 @@ rdpower = function(data = NULL,
                format(toString(round(power.conv.list[2],3)), width=15),
                format(toString(round(power.conv.list[1],3)), width=13),
                format(toString(round(power.conv,3)), width=15))); cat('\n')
-  } else {cat('\n\n')}
+    cat(paste0(rep('=',89),collapse='')); cat('\n')
+
+  } else {cat('\n');cat(paste0(rep('=',89),collapse=''));cat('\n\n')}
 
 
   #################################################################
@@ -456,11 +455,11 @@ rdpower = function(data = NULL,
 
   if (plot==TRUE){
     if(is.null(graph.range)){
-      left = round(-1.5*tau)
-      right = round(1.5*tau)
+      left <- round(-1.5*tau)
+      right <- round(1.5*tau)
     } else{
-      left = graph.range[1]
-      right = graph.range[2]
+      left <- graph.range[1]
+      right <- graph.range[2]
     }
 
     plot(function(x) 1 - pnorm((x)/se.rbc+qnorm(1-alpha/2)) + pnorm((x)/se.rbc-qnorm(1-alpha/2)),
@@ -480,7 +479,7 @@ rdpower = function(data = NULL,
   # Return values
   #################################################################
 
-  output = list(power.rbc = power.rbc,
+  output <- list(power.rbc = power.rbc,
                 se.rbc = se.rbc,
                 sampsi.r = ntilde.r,
                 sampsi.l = ntilde.l,
@@ -498,7 +497,7 @@ rdpower = function(data = NULL,
                 alpha = alpha)
 
   if (all==TRUE){
-    output = c(output,
+    output <- c(output,
                power.conv = power.conv,
                se.conv = se.conv)
   }
