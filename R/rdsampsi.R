@@ -1,6 +1,6 @@
 ###################################################################
 # rdsampsi: sample size calculations for RD designs
-# !version 2.0 17-Dec-2020
+# !version 2.1 09-Nov-2021
 # Authors: Matias Cattaneo, Rocio Titiunik, Gonzalo Vazquez-Bare
 ###################################################################
 
@@ -214,8 +214,6 @@ rdsampsi <- function(data = NULL,
       h.aux <- aux$bws
       h.l <- h.aux[1,1]
       h.r <- h.aux[1,2]
-      nh.l <- aux$Nh[1]
-      nh.r <- aux$Nh[2]
 
       if (is.null(bias)){
         bias <- aux$bias
@@ -346,11 +344,6 @@ rdsampsi <- function(data = NULL,
 
     # Left panel
 
-    if (!is.null(cluster)){
-      gplus <- length(table(cluster[R>=cutoff & !is.na(Y) & !is.na(R)]))
-      gminus <- length(table(cluster[R<cutoff & !is.na(Y) & !is.na(R)]))
-    }
-
     nplus.disp <- sum(R>=cutoff & !is.na(Y) & !is.na(R))
     nminus.disp <- sum(R<cutoff & !is.na(Y) & !is.na(R))
 
@@ -364,6 +357,13 @@ rdsampsi <- function(data = NULL,
 
     n.hnew.r.disp <- sum(R>=cutoff & R<= cutoff + hr & !is.na(Y) & !is.na(R))
     n.hnew.l.disp <- sum(R<cutoff & R>= cutoff - hl & !is.na(Y) & !is.na(R))
+    
+    if (!is.null(cluster)){
+      gplus <- length(table(cluster[R>=cutoff & !is.na(Y) & !is.na(R)]))
+      gminus <- length(table(cluster[R<cutoff & !is.na(Y) & !is.na(R)]))
+      gplus_h_r <- length(table(cluster[R>=cutoff & R<= cutoff + hr & !is.na(Y) & !is.na(R)]))
+      gminus_h_l <- length(table(cluster[R<cutoff & R>= cutoff - hl & !is.na(Y) & !is.na(R)]))
+    }
 
     # Right panel
 
@@ -404,7 +404,14 @@ rdsampsi <- function(data = NULL,
     kernel_type <- NA
     vce_type <- NA
   }
-
+  
+  # Size distortion
+  
+  if (all==TRUE){
+    se_cl_aux <- stilde.cl / sqrt(m.cl)
+    size_dist <- 1 - pnorm(bias/se_cl_aux+z) + pnorm(bias/se_cl_aux-z)
+    
+  }
 
 
   #################################################################
@@ -419,6 +426,9 @@ rdsampsi <- function(data = NULL,
   cat(paste0(format('Derivative    =', width=22), toString(deriv))); cat("\n")
   cat(paste0(format('HA:       tau =', width=22), round(tau,3))); cat("\n")
   cat(paste0(format('Power         =', width=22), round(beta,3))); cat("\n")
+  if (all==TRUE){
+    cat(paste0(format('Size dist.    =', width=22), round(size_dist,3))); cat("\n")
+  }
   cat('\n\n')
 
   cat(paste0(format(paste0("Cutoff c = ", toString(round(cutoff, 3))), width=22), format("Left of c", width=16), format("Right of c", width=16))); cat("\n")
@@ -426,13 +436,32 @@ rdsampsi <- function(data = NULL,
   cat(paste0(format("Eff. number of obs", width=22), format(toString(n.hnew.l.disp),   width=16), format(toString(n.hnew.r.disp),     width=16))); cat("\n")
   cat(paste0(format("BW loc. poly.",      width=22), format(toString(round(hl,3)),     width=16), format(toString(round(hr,3)),       width=16))); cat("\n")
   cat(paste0(format("Order loc. poly.",   width=22), format(toString(p),               width=16), format(toString(p),                 width=16))); cat("\n")
+  text_aux <- "New sample"
+  if (!is.null(cluster)){
+    cat(paste0(format("Number of clusters",    width=22), format(toString(gminus),     width=16), format(toString(gplus),             width=16))); cat("\n")
+    cat(paste0(format("Eff. num. of clusters", width=22), format(toString(gminus_h_l), width=16), format(toString(gplus_h_r),         width=16))); cat("\n")
+    text_aux<- "New cluster sample"
+  }
   cat(paste0(format("Sampling BW",        width=22), format(toString(round(hnew.l,3)), width=16), format(toString(round(hnew.r,3)),   width=16))); cat("\n")
   cat("\n\n")
 
   cat(paste0(rep('=',89),collapse='')); cat('\n')
-  cat(paste0(format('Chosen sample sizes',   width=33),
-             format('Sample size in window', width=35),
-             format('Proportion',            width=15))); cat('\n')
+  #cat(paste0(format('Chosen sample sizes',   width=33),
+  #           format('Sample size in window', width=35),
+  #           format('Proportion',            width=15))); cat('\n')
+  
+  if (!is.null(cluster)){
+    cat(paste0(format('',   width=28),
+               format('Number of clusters in window', width=35),
+               format('Proportion',            width=15))); cat('\n')
+  } 
+  else{
+    cat(paste0(format('',   width=33),
+               format('Number of obs in window', width=35),
+               format('Proportion',            width=15))); cat('\n')
+  }
+  
+  
 
   cat(paste0(format('',        width=25),
              format('[c-h,c)', width=15),

@@ -1,6 +1,6 @@
 ###################################################################
 # rdmde: minimum detectable effect calculations for RD designs
-# !version 2.0 17-Dec-2020
+# !version 2.1 09-Nov-2021
 # Authors: Matias Cattaneo, Rocio Titiunik, Gonzalo Vazquez-Bare
 ###################################################################
 
@@ -209,8 +209,6 @@ rdmde <- function(data = NULL,
       h.aux <- aux$bws
       h.l <- h.aux[1,1]
       h.r <- h.aux[1,2]
-      nh.l <- aux$Nh[1]
-      nh.r <- aux$Nh[2]
 
       if (is.null(bias)){
         bias <- aux$bias
@@ -267,7 +265,7 @@ rdmde <- function(data = NULL,
     ntilde.r <- n.hnew.r
   }
 
-  ntilde <- nplus*ntilde.r/n.hnew.r + nminus*ntilde.l/n.hnew.l
+  ntilde <- nplus*(ntilde.r/n.hnew.r) + nminus*(ntilde.l/n.hnew.l)
 
 
   #################################################################
@@ -359,11 +357,6 @@ rdmde <- function(data = NULL,
 
     # Left panel
 
-    if (!is.null(cluster)){
-      gplus <- length(table(cluster[R>=cutoff & !is.na(Y) & !is.na(R)]))
-      gminus <- length(table(cluster[R<cutoff & !is.na(Y) & !is.na(R)]))
-    }
-
     nplus.disp <- sum(R>=cutoff & !is.na(Y) & !is.na(R))
     nminus.disp <- sum(R<cutoff & !is.na(Y) & !is.na(R))
 
@@ -377,6 +370,13 @@ rdmde <- function(data = NULL,
 
     nhr.disp <- sum(R>=cutoff & R<= cutoff + hr & !is.na(Y) & !is.na(R))
     nhl.disp <- sum(R<cutoff & R>= cutoff - hl & !is.na(Y) & !is.na(R))
+    
+    if (!is.null(cluster)){
+      gplus <- length(table(cluster[R>=cutoff & !is.na(Y) & !is.na(R)]))
+      gminus <- length(table(cluster[R<cutoff & !is.na(Y) & !is.na(R)]))
+      gplus_h_r <- length(table(cluster[R>=cutoff & R<= cutoff + hr & !is.na(Y) & !is.na(R)]))
+      gminus_h_l <- length(table(cluster[R<cutoff & R>= cutoff - hl & !is.na(Y) & !is.na(R)]))
+    }
 
     # Right panel
 
@@ -435,8 +435,15 @@ rdmde <- function(data = NULL,
   cat(paste0(format("Eff. number of obs", width=22), format(toString(nhl.disp),        width=16), format(toString(nhr.disp),          width=16))); cat("\n")
   cat(paste0(format("BW loc. poly.",      width=22), format(toString(round(hl,3)),     width=16), format(toString(round(hr,3)),       width=16))); cat("\n")
   cat(paste0(format("Order loc. poly.",   width=22), format(toString(p),               width=16), format(toString(p),                 width=16))); cat("\n")
-  cat(paste0(format("Sampling BW",        width=22), format(toString(round(hnew.l,3)), width=16), format(toString(round(hnew.r,3)),   width=16))); cat("\n")
-  cat(paste0(format("New sample",         width=22), format(toString(ntilde.l),        width=16), format(toString(ntilde.r),          width=16))); cat("\n")
+  text_aux <- "New sample"
+  if (!is.null(cluster)){
+    cat(paste0(format("Number of clusters",    width=22), format(toString(gminus),     width=16), format(toString(gplus),             width=16))); cat("\n")
+    cat(paste0(format("Eff. num. of clusters", width=22), format(toString(gminus_h_l), width=16), format(toString(gplus_h_r),         width=16))); cat("\n")
+    text_aux<- "New cluster sample"
+  }
+  
+  cat(paste0(format("Sampling BW",    width=22), format(toString(round(hnew.l,3)), width=16), format(toString(round(hnew.r,3)),   width=16))); cat("\n")
+  cat(paste0(format(text_aux,         width=22), format(toString(ntilde.l),        width=16), format(toString(ntilde.r),          width=16))); cat("\n")
   cat("\n\n")
 
   cat(paste0(rep('=',89),collapse='')); cat('\n')
