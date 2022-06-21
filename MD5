@@ -1,10 +1,10 @@
-adb4007fb8be4474de51971a13c7096e *DESCRIPTION
+aab9c8203d8b5e202f16eeb2b7689388 *DESCRIPTION
 255fea1ef299160f35c0a7ec3d9f522c *NAMESPACE
-1d13d2a87ebe5371593a6667fdee49ed *R/rdmde.R
-c63d0bcb272f19a386948db5ad08310e *R/rdpower.R
-2e0be39a8ec5860120cc4d9fcf4e090d *R/rdpower_fun.R
-df95a5ded731a5a675b1a442e114b454 *R/rdpower_package.R
-d3429cbc5e9cfa3d3db8140c9a7625c8 *R/rdsampsi.R
+e3fe5b44d5febf0a9b63eef0a72c73a9 *R/rdmde.R
+d8f6b860a62396fc15e91eb9ea9ad6d3 *R/rdpower.R
+747d32a6a37d83c96758b6e023ddfaa1 *R/rdpower_fun.R
+8915752ce125d4fb00478892c6766dd4 *R/rdpower_package.R
+0b345b7a952df21f8b2f053b2b6c737f *R/rdsampsi.R
 c43eb54d3f605a216a1c495ae9d8ddf9 *man/rdmde.Rd
 629580c04cf30f1ce24bff3437a2f3a1 *man/rdpower-package.Rd
 efa6f4484c0ff5a00c229d8168ef7291 *man/rdpower.Rd
