@@ -1,7 +1,7 @@
 ###################################################################
 # rdmde: minimum detectable effect calculations for RD designs
-# !version 2.3 22-May-2025
-# Authors: Matias Cattaneo, Rocio Titiunik, Gonzalo Vazquez-Bare
+# !version 3.0 15-May-2026
+# Authors: Matias D. Cattaneo, Rocio Titiunik, Gonzalo Vazquez-Bare
 ###################################################################
 
 #' MDE Calculations for RD Designs
@@ -10,11 +10,11 @@
 #'
 #'
 #' @author
-#' Matias Cattaneo, Princeton University. \email{cattaneo@princeton.edu}
+#' Matias D. Cattaneo, Princeton University. \email{matias.d.cattaneo@gmail.com}
 #'
-#' Rocio Titiunik, Princeton University. \email{titiunik@princeton.edu}
+#' Rocio Titiunik, Princeton University. \email{rocio.titiunik@gmail.com}
 #'
-#' Gonzalo Vazquez-Bare, UC Santa Barbara. \email{gvazquez@econ.ucsb.edu}
+#' Gonzalo Vazquez-Bare, UC Santa Barbara. \email{gvazquezbare@gmail.com}
 #'
 #' @references
 #'
@@ -28,7 +28,6 @@
 #' @param nsamples sets the total sample size to the left, sample size to the left inside the bandwidth, total sample size to the right and sample size to the right of the cutoff inside the bandwidth to calculate the variance when the running variable is not specified. When not specified, the values are calculated using the running variable.
 #' @param sampsi sets the sample size at each side of the cutoff for power calculation. The first number is the sample size to the left of the cutoff and the second number is the sample size to the right. Default values are the sample sizes inside the chosen bandwidth.
 #' @param samph sets the bandwidths at each side of the cutoff for power calculation. The first number is the bandwidth to the left of the cutoff and the second number is the bandwidth to the right.  Default values are the bandwidths used by \code{rdrobust}.
-#' @param all displays the power using the conventional variance estimator, in addition to the robust bias corrected one.
 #' @param bias set bias to the left and right of the cutoff. If not specified, the biases are estimated using \code{rdrobust}.
 #' @param variance set variance to the left and right of the cutoff. If not specified, the variances are estimated using \code{rdrobust}.
 #' @param init.cond sets the initial condition for the Newton-Raphson algorithm that finds the MDE.  Default is 0.2 times the standard deviation of the outcome below the cutoff.
@@ -42,17 +41,21 @@
 #' @param rho option for \code{rdrobust()}: specifies the value of \code{rho} so that the bias bandwidth \code{b} equals \code{b=h/rho}.
 #' @param kernel option for \code{rdrobust()}: kernel function used to construct the local-polynomial estimators.
 #' @param bwselect option for \code{rdrobust()}: specifies the bandwidth selection procedure to be used.
-#' @param vce option for \code{rdrobust()}: specifies the procedure used to compute the variance-covariance matrix estimator.
-#' @param cluster option for \code{rdrobust()}: indicates the cluster ID variable used for the cluster-robust variance estimation with degrees-of-freedom weights.
+#' @param vce option for \code{rdrobust()}: specifies the variance-covariance estimator. Current options are \code{nn}, \code{hc0}, \code{hc1}, \code{hc2}, \code{hc3}, and, with \code{cluster} specified, \code{cr1}, \code{cr2}, and \code{cr3}.
+#' @param cluster option for \code{rdrobust()}: indicates the cluster ID variable used for cluster-robust variance estimation.
+#' @param nnmatch option for \code{rdrobust()}: minimum number of neighbors for \code{vce=nn}. Default is \code{nnmatch=3}.
 #' @param scalepar option for \code{rdrobust()}: specifies scaling factor for RD parameter of interest.
 #' @param scaleregul option for \code{rdrobust()}: specifies scaling factor for the regularization terms of bandwidth selectors.
+#' @param sharpbw option for \code{rdrobust()}: if \code{TRUE}, fuzzy RD estimation uses bandwidth selection for the sharp RD model.
 #' @param fuzzy option for \code{rdrobust()}: specifies the treatment status variable used to implement fuzzy RD estimation.
 #' @param level option for \code{rdrobust()}: sets the confidence level for confidence intervals.
 #' @param weights option for \code{rdrobust()}: is the variable used for optional weighting of the estimation procedure. The unit-specific weights multiply the kernel function.
 #' @param masspoints option for \code{rdrobust()}: checks and controls for repeated observations in tue running variable.
 #' @param bwcheck option for \code{rdrobust()}: if a positive integer is provided, the preliminary bandwidth used in the calculations is enlarged so that at least \code{bwcheck} unique observations are used.
 #' @param bwrestrict option for \code{rdrobust()}: if TRUE, computed bandwidths are restricted to lie withing the range of \code{x}. Default is \code{bwrestrict=TRUE}.
-#' @param stdvars option for \code{rdrobust()}: if \code{TRUE}, \code{x} and \code{y} are standardized before computing the bandwidths. Default is \code{stdvars=TRUE}.
+#' @param stdvars option for \code{rdrobust()}: if \code{TRUE}, \code{x} and \code{y} are standardized before computing the bandwidths. Default is \code{stdvars=FALSE}.
+#' @param subset option for \code{rdrobust()}: optional vector specifying a subset of observations to use.
+#' @param ginv.tol option for \code{rdrobust()}: tolerance used to invert matrices involving covariates when \code{covs_drop=TRUE}.
 #'
 #' @return
 #' \item{mde}{MDE using robust bias corrected standard error}
@@ -90,7 +93,6 @@ rdmde <- function(data = NULL,
                   nsamples = NULL,
                   sampsi = NULL,
                   samph = NULL,
-                  all = FALSE,
                   bias = NULL,
                   variance = NULL,
                   init.cond = NULL,
@@ -107,15 +109,19 @@ rdmde <- function(data = NULL,
                   bwselect = 'mserd',
                   vce = 'nn',
                   cluster = NULL,
+                  nnmatch = 3,
                   scalepar = 1,
                   scaleregul = 1,
+                  sharpbw = FALSE,
                   fuzzy = NULL,
                   level = 95,
                   weights = NULL,
                   masspoints = 'adjust',
                   bwcheck = NULL,
                   bwrestrict = TRUE,
-                  stdvars = FALSE){
+                  stdvars = FALSE,
+                  subset = NULL,
+                  ginv.tol = 1e-20){
 
   #################################################################
   # Options, default values and error checking
@@ -127,6 +133,13 @@ rdmde <- function(data = NULL,
     else{
       Y <- data[,1]
       R <- data[,2]
+      Y.rd <- Y
+      R.rd <- R
+      cluster.rd <- cluster
+      sample <- rdpower.subset.sample(Y, R, cluster, subset)
+      Y <- sample$Y
+      R <- sample$R
+      cluster <- sample$cluster
     }
   }
 
@@ -193,6 +206,7 @@ rdmde <- function(data = NULL,
   }
 
   if (is.null(q)){ q <- p + 1}
+  vce <- rdpower.current.vce(vce)
 
 
   #################################################################
@@ -202,9 +216,11 @@ rdmde <- function(data = NULL,
   if (!is.null(data)){
 
     if (is.null(bias) | is.null(variance)){
-      aux <- rdrobust::rdrobust(Y,R,c=cutoff,all=TRUE,covs=covs,covs_drop=covs_drop,deriv=deriv,p=p,q=q,h=h,b=b,rho=rho,cluster=cluster,
-                     kernel=kernel,bwselect=bwselect,vce=vce,scalepar=scalepar,scaleregul=scaleregul,
-                     fuzzy=fuzzy,level=level,weights=weights,masspoints=masspoints,bwcheck=bwcheck,bwrestrict=bwrestrict,stdvars=stdvars)
+      aux <- rdrobust::rdrobust(Y.rd,R.rd,c=cutoff,covs=covs,covs_drop=covs_drop,ginv.tol=ginv.tol,
+                     deriv=deriv,p=p,q=q,h=h,b=b,rho=rho,cluster=cluster.rd,
+                     kernel=kernel,bwselect=bwselect,vce=vce,nnmatch=nnmatch,scalepar=scalepar,scaleregul=scaleregul,
+                     sharpbw=sharpbw,fuzzy=fuzzy,level=level,weights=weights,subset=subset,
+                     masspoints=masspoints,bwcheck=bwcheck,bwrestrict=bwrestrict,stdvars=stdvars)
 
       h.aux <- aux$bws
       h.l <- h.aux[1,1]
@@ -277,13 +293,8 @@ rdmde <- function(data = NULL,
   V.rbc <- Vl.rb/(hnew.l^(1+2*deriv)) + Vr.rb/(hnew.r^(1+2*deriv))
   se.rbc <- sqrt(V.rbc)
 
-  if (all==TRUE){
-    V.conv <- Vl.cl/(hnew.l^(1+2*deriv)) + Vr.cl/(hnew.r^(1+2*deriv))
-    se.conv <- sqrt(V.conv)
-  } else{
-    V.conv <- V.rbc
-    se.conv <- se.rbc
-  }
+  V.conv <- Vl.cl/(hnew.l^(1+2*deriv)) + Vr.cl/(hnew.r^(1+2*deriv))
+  se.conv <- sqrt(V.conv)
 
   ## Bias adjustment
 
@@ -303,9 +314,8 @@ rdmde <- function(data = NULL,
     tau0 <- init.cond
   }
 
-  cat('Calculating MDE...')
-
-  mde.aux <- rdpower.powerNR.mde(ntilde,tau0,se.rbc,qnorm(1-alpha/2),beta)
+  z <- qnorm(1-alpha/2)
+  mde.aux <- rdpower.powerNR.mde(ntilde,tau0,se.rbc,z,beta)
   mde <- mde.aux$mde
 
   beta.list <- numeric(4)
@@ -318,7 +328,7 @@ rdmde <- function(data = NULL,
     beta.list[count] <- baux
 
     if (baux<1){
-      rdpow.aux <- rdpower.powerNR.mde(ntilde,tau0,se.rbc,qnorm(1-alpha/2),baux)
+      rdpow.aux <- rdpower.powerNR.mde(ntilde,tau0,se.rbc,z,baux)
       mde.rbc.list[count] <- rdpow.aux$mde
 
     }
@@ -326,28 +336,23 @@ rdmde <- function(data = NULL,
     count <- count + 1
   }
 
-  if(all==TRUE){
-    mde.conv.aux <- rdpower.powerNR.mde(ntilde,tau0+bias,se.conv,qnorm(1-alpha/2),beta)
-    mde.conv <- mde.conv.aux$mde
+  mde.conv.aux <- rdpower.powerNR.mde(ntilde,tau0+bias,se.conv,z,beta)
+  mde.conv <- mde.conv.aux$mde
 
-    mde.conv.list <- numeric(4)
-    count <- 1
-    for (r in c(-0.125,-0.0625,0.0625,0.125)){
+  mde.conv.list <- numeric(4)
+  count <- 1
+  for (r in c(-0.125,-0.0625,0.0625,0.125)){
 
-      baux <- beta*(1+r)
+    baux <- beta*(1+r)
 
-      if (baux<1){
-        rdpow.conv.aux <- rdpower.powerNR.mde(ntilde,tau0+bias,se.conv,qnorm(1-alpha/2),baux)
-        mde.conv.list[count] <- rdpow.conv.aux$mde
+    if (baux<1){
+      rdpow.conv.aux <- rdpower.powerNR.mde(ntilde,tau0+bias,se.conv,z,baux)
+      mde.conv.list[count] <- rdpow.conv.aux$mde
 
-      }
-
-      count <- count + 1
     }
 
+    count <- count + 1
   }
-
-  cat('MDE obtained')
 
   #################################################################
   # Descriptive statistics for display
@@ -419,69 +424,6 @@ rdmde <- function(data = NULL,
   }
 
   #################################################################
-  # Output
-  #################################################################
-
-  cat('\n')
-  cat(paste0(format('Number of obs =', width=22), toString(N.disp))); cat("\n")
-  cat(paste0(format('BW type       =', width=22), bwselect)); cat("\n")
-  cat(paste0(format('Kernel type   =', width=22), kernel_type)); cat("\n")
-  cat(paste0(format('VCE method    =', width=22), vce_type)); cat("\n")
-  cat(paste0(format('Derivative    =', width=22), toString(deriv))); cat("\n")
-  cat('\n\n')
-
-  cat(paste0(format(paste0("Cutoff c = ", toString(round(cutoff, 3))), width=22), format("Left of c", width=16), format("Right of c", width=16))); cat("\n")
-  cat(paste0(format("Number of obs",      width=22), format(toString(nminus.disp),     width=16), format(toString(nplus.disp),        width=16))); cat("\n")
-  cat(paste0(format("Eff. number of obs", width=22), format(toString(nhl.disp),        width=16), format(toString(nhr.disp),          width=16))); cat("\n")
-  cat(paste0(format("BW loc. poly.",      width=22), format(toString(round(hl,3)),     width=16), format(toString(round(hr,3)),       width=16))); cat("\n")
-  cat(paste0(format("Order loc. poly.",   width=22), format(toString(p),               width=16), format(toString(p),                 width=16))); cat("\n")
-  text_aux <- "New sample"
-  if (!is.null(cluster)){
-    cat(paste0(format("Number of clusters",    width=22), format(toString(gminus),     width=16), format(toString(gplus),             width=16))); cat("\n")
-    cat(paste0(format("Eff. num. of clusters", width=22), format(toString(gminus_h_l), width=16), format(toString(gplus_h_r),         width=16))); cat("\n")
-    text_aux<- "New cluster sample"
-  }
-
-  cat(paste0(format("Sampling BW",    width=22), format(toString(round(hnew.l,3)), width=16), format(toString(round(hnew.r,3)),   width=16))); cat("\n")
-  cat(paste0(format(text_aux,         width=22), format(toString(ntilde.l),        width=16), format(toString(ntilde.r),          width=16))); cat("\n")
-  cat("\n\n")
-
-  cat(paste0(rep('=',89),collapse='')); cat('\n')
-  cat(paste0(format('MDE for power = ', width=25),
-             format('beta = ',     width=15),
-             format('beta = ',     width=15),
-             format('beta = ',     width=15),
-             format('beta = ',     width=13),
-             format('beta = ',         width=15))); cat('\n')
-
-  cat(paste0(format('', width=25),
-             format(toString(round(beta.list[1],3)), width=15),
-             format(toString(round(beta.list[2],3)), width=15),
-             format(toString(round(beta,3))        , width=15),
-             format(toString(round(beta.list[3],3)), width=13),
-             format(toString(round(beta.list[4],3)), width=15))); cat('\n')
-  cat(paste0(rep('-',89),collapse='')); cat('\n')
-  cat(paste0(format('Robust bias-corrected', width=25),
-             format(toString(round(mde.rbc.list[1],3)), width=15),
-             format(toString(round(mde.rbc.list[2],3)), width=15),
-             format(toString(round(mde,3))            , width=15),
-             format(toString(round(mde.rbc.list[3],3)), width=13),
-             format(toString(round(mde.rbc.list[4],3)), width=15)));
-
-  if (all==TRUE){
-    cat('\n')
-    cat(paste0(format('Conventional', width=25),
-               format(toString(round(mde.conv.list[1],3)), width=15),
-               format(toString(round(mde.conv.list[2],3)), width=15),
-               format(toString(round(mde.conv,3))        , width=15),
-               format(toString(round(mde.conv.list[3],3)), width=13),
-               format(toString(round(mde.conv.list[4],3)), width=15))); cat('\n')
-    cat(paste0(rep('=',89),collapse='')); cat('\n')
-
-  } else {cat('\n');cat(paste0(rep('=',89),collapse=''));cat('\n\n')}
-
-
-  #################################################################
   # Return values
   #################################################################
 
@@ -500,13 +442,38 @@ rdmde <- function(data = NULL,
                 Vr.rb = Vr.rb,
                 Vl.rb = Vl.rb,
                 alpha = alpha,
-                beta = beta)
+                beta = beta,
+                mde.conv = mde.conv,
+                se.conv = se.conv)
 
-  if (all==TRUE){
-    output <- c(output,
-               mde.conv = mde.conv,
-               se.conv = se.conv)
-  }
+  output$.display <- list(N.disp = N.disp,
+                          bwselect = bwselect,
+                          kernel_type = kernel_type,
+                          vce_type = vce_type,
+                          deriv = deriv,
+                          cutoff = cutoff,
+                          nminus.disp = nminus.disp,
+                          nplus.disp = nplus.disp,
+                          nhl.disp = nhl.disp,
+                          nhr.disp = nhr.disp,
+                          hl = hl,
+                          hr = hr,
+                          p = p,
+                          clustered = !is.null(cluster),
+                          gminus = if (!is.null(cluster)) gminus else NULL,
+                          gplus = if (!is.null(cluster)) gplus else NULL,
+                          gminus_h_l = if (!is.null(cluster)) gminus_h_l else NULL,
+                          gplus_h_r = if (!is.null(cluster)) gplus_h_r else NULL,
+                          text_aux = if (!is.null(cluster)) "New cluster sample" else "New sample",
+                          hnew.l = hnew.l,
+                          hnew.r = hnew.r,
+                          ntilde.l = ntilde.l,
+                          ntilde.r = ntilde.r,
+                          beta.list = beta.list,
+                          mde.rbc.list = mde.rbc.list,
+                          mde.conv.list = mde.conv.list)
+  output$call <- match.call()
+  class(output) <- "rdmde"
 
   return(output)
 
